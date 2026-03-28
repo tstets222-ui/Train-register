@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>Train Register</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Noto Sans', 'Helvetica', '微軟正黑體', sans-serif;
+        }
+        body {
+            background: #e0e7ef;
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .logsheet {
+            max-width: 1600px;
+            width: 100%;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 15px 30px rgba(0,20,50,0.2);
+            padding: 24px 20px;
+            border: 1px solid #0b3b5c;
+        }
+        .doc-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #002b4f;
+            border-left: 12px solid #f5b01e;
+            padding-left: 20px;
+            margin: 0 0 10px 0;
+            letter-spacing: 2px;
+        }
+        .info-panel {
+            background: #eef3fb;
+            border-radius: 30px;
+            border: 1px solid #afc7db;
+            padding: 20px 20px;
+            margin-bottom: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 18px 12px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .info-item label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #1f3f5c;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .info-item input, .info-item select {
+            border-radius: 40px;
+            border: 1px solid #7e9ebd;
+            padding: 8px 15px;
+            background: white;
+            height: 40px;
+            width: 100%;
+        }
+        /* 卡片區 — 左右並排容器 */
+        .track-container {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .track-card {
+            background: #f0f5fa;
+            border-radius: 30px;
+            border: 2px solid #1f4b77;
+            padding: 18px 20px;
+            flex: 1 1 400px;           /* 基本寬度400px，允許伸縮 */
+            min-width: 0;                /* 允許卡片收縮到小於內容最小寬度 */
+            margin-bottom: 0;             /* 移除原來的底部間距，由容器gap控制 */
+        }
+        .track-title {
+            font-weight: 700;
+            color: #1f4b77;
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .track-title select {
+            border-radius: 40px;
+            border: 1px solid #1f4b77;
+            padding: 6px 15px;
+            background: white;
+            font-weight: 600;
+            margin-left: auto;
+        }
+        .train-table-wrapper {
+            overflow-x: auto;
+            border-radius: 24px;
+            border: 2px solid #1f4b77;
+            background: white;
+            margin: 15px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;            /* 稍微降低最小寬度，讓並排更容易，但仍保留足夠欄位 */
+            table-layout: fixed;
+        }
+        th {
+            background-color: #1f4b77;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 12px 3px;
+            text-align: center;
+            border-right: 1px solid #3d6a94;
+        }
+        th:last-child { border-right: none; }
+        td {
+            border: 1px solid #b8cfdf;
+            padding: 8px 4px;
+            text-align: center;
+            vertical-align: middle;
+            background-color: white;
+        }
+        .train-number-input {
+            width: 85px;
+            padding: 6px;
+            border-radius: 30px;
+            border: 1px solid #7e9ebd;
+            text-align: center;
+        }
+        .time-input {
+            width: 95px;
+            border-radius: 30px;
+            border: 1px solid #7e9ebd;
+            padding: 5px;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+        .btn-time {
+            background: #1f4b77;
+            border: none;
+            color: white;
+            border-radius: 30px;
+            padding: 5px 8px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            width: 60px;
+        }
+        .remark-input {
+            width: 120px;
+            border-radius: 30px;
+            border: 1px solid #7e9ebd;
+            padding: 6px;
+            font-size: 0.8rem;
+        }
+        .add-row-btn {
+            background: #1f4b77;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 8px 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        .action-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            gap: 12px;
+        }
+        .btn {
+            background: #1f4b77;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 10px 25px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid #0d3250;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-warning {
+            background: #b3620e;
+            border-color: #6f3d01;
+        }
+        .btn-print {
+            background: #2c6b2c;
+        }
+        @media print {
+            body { background: white; margin: 0.5in; }
+            .btn, .add-row-btn, .action-bar, .no-print {
+                display: none !important;
+            }
+            input, select {
+                border: none;
+                background: transparent;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            th { background-color: #1f4b77 !important; color: white !important; }
+            /* 打印時保持左右並排 */
+            .track-container {
+                display: flex;
+                gap: 0.5in;
+                page-break-inside: avoid;
+            }
+            .track-card {
+                flex: 1 1 45%;
+                min-width: 0;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="logsheet">
+    <div class="doc-title">🚆 Train Register</div>
+
+    <!-- 共用資訊面板 -->
+    <div class="info-panel">
+        <div class="info-item">
+            <label>PSB staff / Duty SC</label>
+            <input type="text" id="operatorName" placeholder="姓名" value=" ">
+        </div>
+        <div class="info-item">
+            <label>日期</label>
+            <input type="date" id="todayDate" value="2026-03-15">
+        </div>
+        <div class="info-item">
+            <label>路線</label>
+            <select id="lineSelectLocation">
+                <option value="twl">荃灣綫</option>
+                <option value="kul">觀塘綫</option>
+                <option value="tml">屯馬綫</option>
+            </select>
+        </div>
+        <div class="info-item">
+            <label>車站</label>
+            <select id="stationSelect"></select>
+        </div>
+        <div class="info-item">
+            <label>全局備註</label>
+            <input type="text" id="globalRemarks" placeholder="天氣、延誤等">
+        </div>
+    </div>
+
+    <!-- 左右並排容器：上行＋下行卡片 -->
+    <div class="track-container">
+        <!-- 上行線卡片 -->
+        <div class="track-card" id="upTrackCard">
+            <div class="track-title">
+                ⬆️ 上行線 (Up Track)
+                <span style="flex:1;"></span>
+                月台：
+                <select id="upPlatform">
+                    <option>1號月台</option><option>2號月台</option><option>3號月台</option><option>4號月台</option>
+                </select>
+            </div>
+            <div class="train-table-wrapper">
+                <table id="upTable">
+                    <thead>
+                        <tr>
+                            <th style="width:8%">序號</th>
+                            <th style="width:12%">車次</th>
+                            <th style="width:20%" colspan="2">到站 (Train Door Open)</th>
+                            <th style="width:20%" colspan="2">離站 (Departure)</th>
+                            <th style="width:15%">備註</th>
+                        </tr>
+                        <tr style="background:#dae6f2; color:#002b4f;">
+                            <th></th>
+                            <th>Train No.</th>
+                            <th>記錄</th><th>時間</th>
+                            <th>記錄</th><th>時間</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="upTableBody"></tbody>
+                </table>
+            </div>
+            <button class="add-row-btn" id="addUpRowBtn">➕ 新增上行列車</button>
+        </div>
+
+        <!-- 下行線卡片 -->
+        <div class="track-card" id="downTrackCard">
+            <div class="track-title">
+                ⬇️ 下行線 (Down Track)
+                <span style="flex:1;"></span>
+                月台：
+                <select id="downPlatform">
+                    <option>1號月台</option><option>2號月台</option><option>3號月台</option><option>4號月台</option>
+                </select>
+            </div>
+            <div class="train-table-wrapper">
+                <table id="downTable">
+                    <thead>
+                        <tr>
+                            <th style="width:8%">序號</th>
+                            <th style="width:12%">車次</th>
+                            <th style="width:20%" colspan="2">到站 (Train Door Open)</th>
+                            <th style="width:20%" colspan="2">離站 (Departure)</th>
+                            <th style="width:15%">備註</th>
+                        </tr>
+                        <tr style="background:#dae6f2; color:#002b4f;">
+                            <th></th>
+                            <th>Train No.</th>
+                            <th>記錄</th><th>時間</th>
+                            <th>記錄</th><th>時間</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="downTableBody"></tbody>
+                </table>
+            </div>
+            <button class="add-row-btn" id="addDownRowBtn">➕ 新增下行列車</button>
+        </div>
+    </div>
+
+    <!-- 全域操作按鈕 -->
+    <div class="action-bar">
+        <div>
+            <button class="btn btn-warning" id="resetAllBtn">🔐 重置所有紀錄 (需密碼)</button>
+        </div>
+        <div>
+            <button class="btn btn-print" id="exportPdfBtn">🖨️ 列印 / PDF</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    // ---------- 全域變數 ----------
+    const PASSWORD = '1524222';           // 重置及修改時間密碼
+    let isLoading = false;
+
+    // 車站資料 (與原風格一致)
+    const stationData = {
+        twl: ['中環','金鐘','尖沙咀','佐敦','油麻地','旺角','太子','深水埗','長沙灣','荔枝角','美孚','荔景','葵芳','葵興','大窩口','荃灣'],
+        kul: ['黃埔','何文田','油麻地','旺角','太子','石硤尾','九龍塘','樂富','黃大仙','鑽石山','彩虹','九龍灣','牛頭角','觀塘','藍田','油塘','調景嶺'],
+        tml: ['屯門','兆康','天水圍','朗屏','元朗','錦上路','荃灣西','美孚','南昌','柯士甸','尖東','紅磡','何文田','土瓜灣','宋皇臺','啟德','鑽石山','顯徑','大圍','車公廟','沙田圍','第一城','石門','大水坑','恆安','馬鞍山','烏溪沙']
+    };
+
+    // ---------- 輔助函數 ----------
+    function nowTime() {
+        return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    // 更新車站下拉選單
+    function updateStations() {
+        let line = document.getElementById('lineSelectLocation').value;
+        let stations = stationData[line] || stationData.twl;
+        let stationSel = document.getElementById('stationSelect');
+        let current = stationSel.value;
+        stationSel.innerHTML = '';
+        stations.forEach(s => stationSel.add(new Option(s, s)));
+        if (stations.includes(current)) stationSel.value = current;
+        else stationSel.value = stations[0] || '';
+        saveToLocalStorage();
+    }
+
+    // ---------- 建立表格行 (時間按鈕增加密碼保護) ----------
+    function createRow(seq) {
+        let tr = document.createElement('tr');
+        tr.dataset.seq = seq;
+
+        // 序號
+        let tdSeq = document.createElement('td');
+        tdSeq.innerText = seq;
+        tr.appendChild(tdSeq);
+
+        // 車次輸入
+        let tdTrain = document.createElement('td');
+        let trainInp = document.createElement('input');
+        trainInp.type = 'text';
+        trainInp.placeholder = '車次';
+        trainInp.classList.add('train-number-input');
+        tdTrain.appendChild(trainInp);
+        tr.appendChild(tdTrain);
+
+        // 到站按鈕
+        let tdArrBtn = document.createElement('td');
+        let arrBtn = document.createElement('button');
+        arrBtn.innerText = '🕒 Arr';
+        arrBtn.classList.add('btn-time');
+        tdArrBtn.appendChild(arrBtn);
+        tr.appendChild(tdArrBtn);
+
+        // 到站時間
+        let tdArrTime = document.createElement('td');
+        let arrInp = document.createElement('input');
+        arrInp.type = 'text';
+        arrInp.placeholder = '--:--:--';
+        arrInp.classList.add('arrival-input', 'time-input');
+        tdArrTime.appendChild(arrInp);
+        tr.appendChild(tdArrTime);
+
+        // 離站按鈕
+        let tdDepBtn = document.createElement('td');
+        let depBtn = document.createElement('button');
+        depBtn.innerText = '🕒 Dep';
+        depBtn.classList.add('btn-time');
+        tdDepBtn.appendChild(depBtn);
+        tr.appendChild(tdDepBtn);
+
+        // 離站時間
+        let tdDepTime = document.createElement('td');
+        let depInp = document.createElement('input');
+        depInp.type = 'text';
+        depInp.placeholder = '--:--:--';
+        depInp.classList.add('departure-input', 'time-input');
+        tdDepTime.appendChild(depInp);
+        tr.appendChild(tdDepTime);
+
+        // 備註輸入
+        let tdRemark = document.createElement('td');
+        let remarkInp = document.createElement('input');
+        remarkInp.type = 'text';
+        remarkInp.placeholder = '備註';
+        remarkInp.classList.add('remark-input');
+        tdRemark.appendChild(remarkInp);
+        tr.appendChild(tdRemark);
+
+        // **** 修改部分：時間按鈕加入密碼保護 ****
+        arrBtn.onclick = (e) => {
+            e.preventDefault();
+            // 若為空則直接填入，否則需密碼
+            if (arrInp.value.trim() === '') {
+                arrInp.value = nowTime();
+                saveToLocalStorage();
+            } else {
+                let pwd = prompt('此到站時間已記錄，請輸入密碼以修改：');
+                if (pwd === PASSWORD) {
+                    arrInp.value = nowTime();
+                    saveToLocalStorage();
+                } else {
+                    alert('密碼錯誤，時間未修改。');
+                }
+            }
+        };
+
+        depBtn.onclick = (e) => {
+            e.preventDefault();
+            if (depInp.value.trim() === '') {
+                depInp.value = nowTime();
+                saveToLocalStorage();
+            } else {
+                let pwd = prompt('此離站時間已記錄，請輸入密碼以修改：');
+                if (pwd === PASSWORD) {
+                    depInp.value = nowTime();
+                    saveToLocalStorage();
+                } else {
+                    alert('密碼錯誤，時間未修改。');
+                }
+            }
+        };
+        // **** 結束修改 ****
+
+        // 輸入變更儲存
+        trainInp.addEventListener('input', saveToLocalStorage);
+        arrInp.addEventListener('change', saveToLocalStorage);
+        depInp.addEventListener('change', saveToLocalStorage);
+        remarkInp.addEventListener('input', saveToLocalStorage);
+
+        return tr;
+    }
+
+    // 初始化兩個表格 (預設各5行，可自行增減)
+    function buildTables(upRows = 5, downRows = 5) {
+        let upTbody = document.getElementById('upTableBody');
+        let downTbody = document.getElementById('downTableBody');
+        upTbody.innerHTML = '';
+        downTbody.innerHTML = '';
+        for (let i = 1; i <= upRows; i++) upTbody.appendChild(createRow(i));
+        for (let i = 1; i <= downRows; i++) downTbody.appendChild(createRow(i));
+    }
+
+    // ---------- 儲存至 localStorage ----------
+    function saveToLocalStorage() {
+        if (isLoading) return;
+        // 收集共用資訊
+        const data = {
+            operatorName: document.getElementById('operatorName').value,
+            todayDate: document.getElementById('todayDate').value,
+            lineSelectLocation: document.getElementById('lineSelectLocation').value,
+            stationSelect: document.getElementById('stationSelect').value,
+            globalRemarks: document.getElementById('globalRemarks').value,
+            upPlatform: document.getElementById('upPlatform').value,
+            downPlatform: document.getElementById('downPlatform').value,
+            upTrains: [],
+            downTrains: []
+        };
+
+        // 收集上行表格資料
+        document.querySelectorAll('#upTableBody tr').forEach(row => {
+            let trainNum = row.querySelector('.train-number-input')?.value || '';
+            let arrival = row.querySelector('.arrival-input')?.value || '';
+            let departure = row.querySelector('.departure-input')?.value || '';
+            let remark = row.querySelector('.remark-input')?.value || '';
+            data.upTrains.push({ trainNum, arrival, departure, remark });
+        });
+
+        // 收集下行表格資料
+        document.querySelectorAll('#downTableBody tr').forEach(row => {
+            let trainNum = row.querySelector('.train-number-input')?.value || '';
+            let arrival = row.querySelector('.arrival-input')?.value || '';
+            let departure = row.querySelector('.departure-input')?.value || '';
+            let remark = row.querySelector('.remark-input')?.value || '';
+            data.downTrains.push({ trainNum, arrival, departure, remark });
+        });
+
+        localStorage.setItem('trainRegisterUpDown', JSON.stringify(data));
+    }
+
+    // 從 localStorage 載入
+    function loadFromLocalStorage() {
+        isLoading = true;
+        let saved = localStorage.getItem('trainRegisterUpDown');
+        if (!saved) {
+            buildTables(5, 5);
+            updateStations();
+            isLoading = false;
+            return;
+        }
+        try {
+            let data = JSON.parse(saved);
+            document.getElementById('operatorName').value = data.operatorName || '';
+            document.getElementById('todayDate').value = data.todayDate || '2026-03-15';
+            document.getElementById('lineSelectLocation').value = data.lineSelectLocation || 'twl';
+            updateStations();  // 更新站點選單
+            document.getElementById('stationSelect').value = data.stationSelect || stationData[data.lineSelectLocation][0];
+            document.getElementById('globalRemarks').value = data.globalRemarks || '';
+            document.getElementById('upPlatform').value = data.upPlatform || '1號月台';
+            document.getElementById('downPlatform').value = data.downPlatform || '2號月台';
+
+            // 重建上行表格
+            let upTbody = document.getElementById('upTableBody');
+            upTbody.innerHTML = '';
+            if (data.upTrains && data.upTrains.length) {
+                data.upTrains.forEach((t, idx) => {
+                    let row = createRow(idx + 1);
+                    row.querySelector('.train-number-input').value = t.trainNum || '';
+                    row.querySelector('.arrival-input').value = t.arrival || '';
+                    row.querySelector('.departure-input').value = t.departure || '';
+                    row.querySelector('.remark-input').value = t.remark || '';
+                    upTbody.appendChild(row);
+                });
+            } else {
+                // 若無資料，給預設5行
+                for (let i = 1; i <= 5; i++) upTbody.appendChild(createRow(i));
+            }
+
+            // 重建下行表格
+            let downTbody = document.getElementById('downTableBody');
+            downTbody.innerHTML = '';
+            if (data.downTrains && data.downTrains.length) {
+                data.downTrains.forEach((t, idx) => {
+                    let row = createRow(idx + 1);
+                    row.querySelector('.train-number-input').value = t.trainNum || '';
+                    row.querySelector('.arrival-input').value = t.arrival || '';
+                    row.querySelector('.departure-input').value = t.departure || '';
+                    row.querySelector('.remark-input').value = t.remark || '';
+                    downTbody.appendChild(row);
+                });
+            } else {
+                for (let i = 1; i <= 5; i++) downTbody.appendChild(createRow(i));
+            }
+        } catch (e) {
+            console.warn(e);
+            buildTables(5, 5);
+        }
+        isLoading = false;
+    }
+
+    // ---------- 重置頁面 (需密碼) ----------
+    function resetAll() {
+        let pwd = prompt('請輸入密碼以重置所有資料：');
+        if (pwd !== PASSWORD) {
+            alert('密碼錯誤，重置取消');
+            return;
+        }
+        localStorage.removeItem('trainRegisterUpDown');
+        location.reload();
+    }
+
+    // ---------- 新增行 (方向) ----------
+    function addRow(tbodyId) {
+        let tbody = document.getElementById(tbodyId);
+        let newSeq = tbody.children.length + 1;
+        tbody.appendChild(createRow(newSeq));
+        saveToLocalStorage();
+    }
+
+    // ---------- 事件綁定 ----------
+    window.addEventListener('load', function() {
+        loadFromLocalStorage();
+
+        // 共用面板變更儲存
+        document.getElementById('operatorName').addEventListener('input', saveToLocalStorage);
+        document.getElementById('todayDate').addEventListener('change', saveToLocalStorage);
+        document.getElementById('lineSelectLocation').addEventListener('change', function() {
+            updateStations();
+            saveToLocalStorage();
+        });
+        document.getElementById('stationSelect').addEventListener('change', saveToLocalStorage);
+        document.getElementById('globalRemarks').addEventListener('input', saveToLocalStorage);
+        document.getElementById('upPlatform').addEventListener('change', saveToLocalStorage);
+        document.getElementById('downPlatform').addEventListener('change', saveToLocalStorage);
+
+        // 新增行按鈕
+        document.getElementById('addUpRowBtn').onclick = () => addRow('upTableBody');
+        document.getElementById('addDownRowBtn').onclick = () => addRow('downTableBody');
+
+        // 重置與列印
+        document.getElementById('resetAllBtn').onclick = resetAll;
+        document.getElementById('exportPdfBtn').onclick = () => window.print();
+    });
+
+})();
+</script>
+</body>
+</html>
